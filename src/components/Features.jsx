@@ -83,7 +83,7 @@ export const BentoCard = ({ src, title, description, ctaText, href }) => {
           videoRef.current.pause();
         }
       },
-      { threshold: 0.1 }, // Starts playing slightly earlier for smoother UX
+      { threshold: 0.15 }, // Starts playing slightly earlier for smoother UX
     );
 
     observer.observe(videoRef.current);
@@ -92,7 +92,6 @@ export const BentoCard = ({ src, title, description, ctaText, href }) => {
   }, []);
 
   // 🚀 OPTIMIZATION: Direct DOM manipulation instead of React useState.
-  // This prevents the entire card & video from re-rendering on every mouse pixel movement.
   const handleMouseMove = (e) => {
     if (!hoverButtonRef.current || !glowRef.current) return;
     const rect = hoverButtonRef.current.getBoundingClientRect();
@@ -118,8 +117,12 @@ export const BentoCard = ({ src, title, description, ctaText, href }) => {
         loop
         muted
         playsInline
-        preload="none"
-        className="absolute left-0 top-0 size-full object-cover object-center transform-gpu"
+        // 🚀 OPTIMIZATION: Changed to metadata so the browser prepares the video headers
+        preload="metadata"
+        // 🚀 OPTIMIZATION: Prevents the browser from adding unnecessary PiP overhead
+        disablePictureInPicture
+        // 🚀 OPTIMIZATION: Use will-change to hint the browser to prioritize rendering
+        className="absolute left-0 top-0 size-full object-cover object-center transform-gpu will-change-transform"
       />
 
       <div className="absolute inset-0 flex size-full flex-col justify-between p-5 transition-colors duration-500">
