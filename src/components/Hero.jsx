@@ -7,19 +7,19 @@ gsap.registerPlugin(ScrollTrigger);
 
 const SLIDES = [
   {
-    src: "videos/hero-1.mp4",
+    src: "videos/hero-1.webm",
     title: "Timeless Tradition",
     description:
       "Honoring the ancient echoes of our past.\nWitness the dawn of a new era.",
   },
   {
-    src: "videos/hero-2.mp4",
+    src: "videos/hero-2.webm",
     title: "Unprecedented",
     description:
       "A spectacle unlike anything ever witnessed in history.\nPrepare for an experience beyond imagination.",
   },
   {
-    src: "videos/hero-3.mp4",
+    src: "videos/hero-3.webm",
     title: "The Legacy",
     description:
       "Forging greatness that will echo through time.\nMasterfully brought to life by the Technical Team.",

@@ -13,12 +13,12 @@ const Story = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const teamPhotos = [
-    "/img/team-1.jpg",
-    "/img/team-2.jpg",
-    "/img/team-3.jpg",
-    "/img/team-4.jpg",
-    "/img/team-5.jpg",
-    "/img/team-6.jpg",
+    "/img/team-1.webp",
+    "/img/team-2.webp",
+    "/img/team-3.webp",
+    "/img/team-4.webp",
+    "/img/team-5.webp",
+    "/img/team-6.webp",
   ];
 
   // Cache quick setters to eliminate CPU overhead during mousemove

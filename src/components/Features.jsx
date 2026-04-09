@@ -179,7 +179,7 @@ const Features = () => {
 
         <BentoTilt className="border-hsla relative mb-7 h-96 w-full overflow-hidden rounded-md md:h-[65vh]">
           <BentoCard
-            src="videos/parampara.mp4"
+            src="videos/parampara.webm"
             title={
               <>
                 p<b>a</b>rampara
@@ -194,7 +194,7 @@ const Features = () => {
         <div className="grid h-auto md:h-[80vh] w-full grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-7">
           <BentoTilt className="bento-tilt_1 h-96 md:h-full md:col-span-1 md:row-span-2">
             <BentoCard
-              src="videos/shivparv.mp4"
+              src="videos/shivparv.webm"
               title={
                 <>
                   shivp<b>a</b>rv
@@ -208,7 +208,7 @@ const Features = () => {
 
           <BentoTilt className="bento-tilt_1 h-96 md:h-full md:col-span-2 md:row-span-1">
             <BentoCard
-              src="videos/hero-1.mp4"
+              src="videos/hero-1.webm"
               title={
                 <>
                   alu<b>m</b>ni
@@ -222,7 +222,7 @@ const Features = () => {
 
           <BentoTilt className="bento-tilt_1 h-96 md:h-full md:col-span-1 md:row-span-1">
             <BentoCard
-              src="videos/hero-3.mp4"
+              src="videos/hero-3.webm"
               title={
                 <>
                   g<b>a</b>npati
@@ -236,7 +236,7 @@ const Features = () => {
 
           <BentoTilt className="bento-tilt_1 h-96 md:h-full md:col-span-1 md:row-span-1">
             <BentoCard
-              src="videos/dahihandi.mp4"
+              src="videos/dahihandi.webm"
               title={
                 <>
                   dahih<b>a</b>ndi
