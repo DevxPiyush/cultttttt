@@ -14,14 +14,36 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
   const principal = topLeaders.length > 0 ? topLeaders[0] : null;
   const facultyAdvisors = topLeaders.length > 1 ? topLeaders.slice(1) : [];
 
+  // IntersectionObserver for Mobile Viewport Animation
   useEffect(() => {
-    // If no team members exist, don't run the slider animation
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-inview");
+          } else {
+            entry.target.classList.remove("is-inview");
+          }
+        });
+      },
+      { threshold: 0.4 }, // Triggers when 40% of the card is visible
+    );
+
+    const cards = document.querySelectorAll(".team-card");
+    cards.forEach((card) => observer.observe(card));
+
+    return () => {
+      cards.forEach((card) => observer.unobserve(card));
+      observer.disconnect();
+    };
+  }, [topLeaders, teamMembers]);
+
+  // Existing GSAP Slider logic
+  useEffect(() => {
     if (teamMembers.length === 0) return;
 
     const ctx = gsap.context(() => {
       const slider = sliderRef.current;
-
-      // OPTIMIZATION: Using scrollWidth instead of offsetWidth for accurate horizontal distance
       const getScrollAmount = () => -(slider.scrollWidth - window.innerWidth);
 
       gsap.to(slider, {
@@ -42,7 +64,7 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
     return () => {
       ctx.revert();
     };
-  }, [teamMembers]); // Re-run if the teamMembers prop changes
+  }, [teamMembers]);
 
   return (
     <div className="relative bg-black overflow-hidden selection:bg-violet-300 selection:text-black">
@@ -60,17 +82,17 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
 
           <div className="flex flex-col w-full max-w-[95%] xl:max-w-[90%] mx-auto px-5 gap-10 md:gap-16">
             <div className="flex justify-center w-full">
-              <div className="group relative w-full sm:w-[400px] md:w-[450px] h-[450px] md:h-[550px] overflow-hidden rounded-2xl bg-zinc-900 border border-yellow-300/30 hover:border-yellow-300/80 transition-colors duration-500 shadow-[0_0_30px_rgba(253,224,71,0.05)] hover:shadow-[0_0_40px_rgba(253,224,71,0.2)] transform-gpu">
+              <div className="team-card group relative w-full sm:w-[400px] md:w-[450px] h-[450px] md:h-[550px] overflow-hidden rounded-2xl bg-zinc-900 border border-yellow-300/30 hover:border-yellow-300/80 transition-colors duration-500 shadow-[0_0_30px_rgba(253,224,71,0.05)] hover:shadow-[0_0_40px_rgba(253,224,71,0.2)] transform-gpu">
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                   <img
                     src={principal.img}
                     alt={principal.name}
                     decoding="async"
-                    className="w-full h-full object-cover grayscale opacity-70 transition-[transform,filter,opacity] duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-105 pointer-events-auto"
+                    className="w-full h-full object-cover grayscale opacity-70 transition-[transform,filter,opacity] duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-105 max-md:group-[.is-inview]:grayscale-0 max-md:group-[.is-inview]:opacity-100 max-md:group-[.is-inview]:scale-105 pointer-events-auto"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
                 </div>
-                <div className="absolute bottom-0 left-0 w-full p-6 md:p-8 transform transition-transform duration-500 md:group-hover:-translate-y-2 z-10 pointer-events-none flex flex-col items-center text-center">
+                <div className="absolute bottom-0 left-0 w-full p-6 md:p-8 transform transition-transform duration-500 md:group-hover:-translate-y-2 max-md:group-[.is-inview]:-translate-y-2 z-10 pointer-events-none flex flex-col items-center text-center">
                   <h3 className="text-3xl md:text-5xl font-circular-web text-blue-50 mb-1 drop-shadow-md">
                     {principal.name}
                   </h3>
@@ -85,18 +107,18 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
               {facultyAdvisors.map((leader) => (
                 <div
                   key={leader.id}
-                  className="group relative w-full h-[380px] md:h-[480px] overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-white/30 transition-colors duration-500 transform-gpu"
+                  className="team-card group relative w-full h-[380px] md:h-[480px] overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-white/30 transition-colors duration-500 transform-gpu"
                 >
                   <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <img
                       src={leader.img}
                       alt={leader.name}
                       decoding="async"
-                      className="w-full h-full object-cover grayscale opacity-70 transition-[transform,filter,opacity] duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-110 pointer-events-auto"
+                      className="w-full h-full object-cover grayscale opacity-70 transition-[transform,filter,opacity] duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-110 max-md:group-[.is-inview]:grayscale-0 max-md:group-[.is-inview]:opacity-100 max-md:group-[.is-inview]:scale-110 pointer-events-auto"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />
                   </div>
-                  <div className="absolute bottom-0 left-0 w-full p-6 transform transition-transform duration-500 md:group-hover:-translate-y-3 z-10 pointer-events-none">
+                  <div className="absolute bottom-0 left-0 w-full p-6 transform transition-transform duration-500 md:group-hover:-translate-y-3 max-md:group-[.is-inview]:-translate-y-3 z-10 pointer-events-none">
                     <h3 className="text-2xl md:text-3xl font-circular-web text-blue-50 mb-1 drop-shadow-md">
                       {leader.name}
                     </h3>
@@ -136,18 +158,18 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
               {teamMembers.map((member) => (
                 <div
                   key={member.id}
-                  className="group relative w-[280px] sm:w-[320px] md:w-[450px] h-[380px] md:h-[520px] mr-6 md:mr-8 flex-shrink-0 overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-white/20 transition-colors duration-500 transform-gpu"
+                  className="team-card group relative w-[280px] sm:w-[320px] md:w-[450px] h-[380px] md:h-[520px] mr-6 md:mr-8 flex-shrink-0 overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-white/20 transition-colors duration-500 transform-gpu"
                 >
                   <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <img
                       src={member.img}
                       alt={member.name}
                       decoding="async"
-                      className="w-full h-full object-cover grayscale opacity-70 transition-[transform,filter,opacity] duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-110 pointer-events-auto"
+                      className="w-full h-full object-cover grayscale opacity-70 transition-[transform,filter,opacity] duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-110 max-md:group-[.is-inview]:grayscale-0 max-md:group-[.is-inview]:opacity-100 max-md:group-[.is-inview]:scale-110 pointer-events-auto"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />
                   </div>
-                  <div className="absolute bottom-0 left-0 w-full p-5 md:p-6 transform transition-transform duration-500 md:group-hover:-translate-y-3 z-10 pointer-events-none">
+                  <div className="absolute bottom-0 left-0 w-full p-5 md:p-6 transform transition-transform duration-500 md:group-hover:-translate-y-3 max-md:group-[.is-inview]:-translate-y-3 z-10 pointer-events-none">
                     <h3 className="text-2xl sm:text-3xl md:text-5xl font-circular-web text-blue-50 mb-0.5">
                       {member.name}
                     </h3>
