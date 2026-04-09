@@ -14,7 +14,7 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
   const principal = topLeaders.length > 0 ? topLeaders[0] : null;
   const facultyAdvisors = topLeaders.length > 1 ? topLeaders.slice(1) : [];
 
-  // IntersectionObserver for Mobile Viewport Animation
+  // 1. New IntersectionObserver for Mobile Viewport Animation
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -82,8 +82,10 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
 
           <div className="flex flex-col w-full max-w-[95%] xl:max-w-[90%] mx-auto px-5 gap-10 md:gap-16">
             <div className="flex justify-center w-full">
+              {/* Added 'team-card' here */}
               <div className="team-card group relative w-full sm:w-[400px] md:w-[450px] h-[450px] md:h-[550px] overflow-hidden rounded-2xl bg-zinc-900 border border-yellow-300/30 hover:border-yellow-300/80 transition-colors duration-500 shadow-[0_0_30px_rgba(253,224,71,0.05)] hover:shadow-[0_0_40px_rgba(253,224,71,0.2)] transform-gpu">
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  {/* Added max-md:group-[.is-inview]:... utilities */}
                   <img
                     src={principal.img}
                     alt={principal.name}
@@ -92,6 +94,7 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
                 </div>
+                {/* Added max-md:group-[.is-inview]:... utilities */}
                 <div className="absolute bottom-0 left-0 w-full p-6 md:p-8 transform transition-transform duration-500 md:group-hover:-translate-y-2 max-md:group-[.is-inview]:-translate-y-2 z-10 pointer-events-none flex flex-col items-center text-center">
                   <h3 className="text-3xl md:text-5xl font-circular-web text-blue-50 mb-1 drop-shadow-md">
                     {principal.name}
@@ -105,11 +108,13 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 w-full">
               {facultyAdvisors.map((leader) => (
+                // Added 'team-card' here
                 <div
                   key={leader.id}
                   className="team-card group relative w-full h-[380px] md:h-[480px] overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-white/30 transition-colors duration-500 transform-gpu"
                 >
                   <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {/* Added max-md:group-[.is-inview]:... utilities */}
                     <img
                       src={leader.img}
                       alt={leader.name}
@@ -118,6 +123,7 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />
                   </div>
+                  {/* Added max-md:group-[.is-inview]:... utilities */}
                   <div className="absolute bottom-0 left-0 w-full p-6 transform transition-transform duration-500 md:group-hover:-translate-y-3 max-md:group-[.is-inview]:-translate-y-3 z-10 pointer-events-none">
                     <h3 className="text-2xl md:text-3xl font-circular-web text-blue-50 mb-1 drop-shadow-md">
                       {leader.name}
@@ -156,11 +162,13 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
               ref={sliderRef}
             >
               {teamMembers.map((member) => (
+                // Added 'team-card' here
                 <div
                   key={member.id}
                   className="team-card group relative w-[280px] sm:w-[320px] md:w-[450px] h-[380px] md:h-[520px] mr-6 md:mr-8 flex-shrink-0 overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-white/20 transition-colors duration-500 transform-gpu"
                 >
                   <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {/* Added max-md:group-[.is-inview]:... utilities */}
                     <img
                       src={member.img}
                       alt={member.name}
@@ -169,6 +177,7 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />
                   </div>
+                  {/* Added max-md:group-[.is-inview]:... utilities */}
                   <div className="absolute bottom-0 left-0 w-full p-5 md:p-6 transform transition-transform duration-500 md:group-hover:-translate-y-3 max-md:group-[.is-inview]:-translate-y-3 z-10 pointer-events-none">
                     <h3 className="text-2xl sm:text-3xl md:text-5xl font-circular-web text-blue-50 mb-0.5">
                       {member.name}

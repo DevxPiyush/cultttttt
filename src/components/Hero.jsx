@@ -7,19 +7,19 @@ gsap.registerPlugin(ScrollTrigger);
 
 const SLIDES = [
   {
-    src: "videos/hero-1.webm",
+    src: "videos/hero-1.mp4",
     title: "Timeless Tradition",
     description:
       "Honoring the ancient echoes of our past.\nWitness the dawn of a new era.",
   },
   {
-    src: "videos/hero-2.webm",
+    src: "videos/hero-2.mp4",
     title: "Unprecedented",
     description:
       "A spectacle unlike anything ever witnessed in history.\nPrepare for an experience beyond imagination.",
   },
   {
-    src: "videos/hero-3.webm",
+    src: "videos/hero-3.mp4",
     title: "The Legacy",
     description:
       "Forging greatness that will echo through time.\nMasterfully brought to life by the Technical Team.",
@@ -38,7 +38,12 @@ const Hero = () => {
   const videoRefs = useRef([]);
 
   const handleVideoLoad = () => {
-    setLoadedVideos((prev) => prev + 1);
+    setLoadedVideos((prev) => Math.min(prev + 1, SLIDES.length));
+  };
+
+  const handleVideoError = () => {
+    // Treat failed assets as "resolved" so the loader cannot get stuck forever.
+    setLoadedVideos((prev) => Math.min(prev + 1, SLIDES.length));
   };
 
   // Prevent layout jumps by refreshing ScrollTrigger after the loading screen disappears
@@ -48,6 +53,12 @@ const Hero = () => {
       setTimeout(() => ScrollTrigger.refresh(), 100);
     }
   }, [loadedVideos]);
+
+  useEffect(() => {
+    // Final safety net in case media events do not fire on a slow/unreliable network.
+    const fallbackTimer = setTimeout(() => setLoading(false), 4000);
+    return () => clearTimeout(fallbackTimer);
+  }, []);
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -182,6 +193,7 @@ const Hero = () => {
               muted
               playsInline
               onLoadedData={handleVideoLoad}
+              onError={handleVideoError}
               className="absolute left-0 top-0 size-full object-cover object-center transform-gpu"
               style={{
                 zIndex:
