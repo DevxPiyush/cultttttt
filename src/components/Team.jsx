@@ -333,21 +333,20 @@ const Team = () => {
   const sliderRef = useRef(null);
   const cursorRef = useRef(null);
 
-  // Split the leadership array
   const principal = topLeaders[0];
   const facultyAdvisors = topLeaders.slice(1);
 
   useEffect(() => {
-    let ctx = gsap.context(() => {
+    let moveCursor;
+
+    // Use gsap.context to manage animations and cleanup
+    const ctx = gsap.context(() => {
       const slider = sliderRef.current;
 
-      const getScrollAmount = () => {
-        let sliderWidth = slider.scrollWidth;
-        return -(sliderWidth - window.innerWidth);
-      };
+      // Ensure scroll amount recalculates dynamically
+      const getScrollAmount = () => -(slider.scrollWidth - window.innerWidth);
 
-      // Horizontally slide the whole container
-      const tween = gsap.to(slider, {
+      gsap.to(slider, {
         x: getScrollAmount,
         ease: "none",
         scrollTrigger: {
@@ -355,42 +354,42 @@ const Team = () => {
           pin: true,
           start: "top top",
           end: () => `+=${slider.scrollWidth - window.innerWidth}`,
-          scrub: 1,
-          invalidateOnRefresh: true,
+          scrub: 1, // Slight smoothing
+          invalidateOnRefresh: true, // Recalculates if window resizes
         },
       });
 
-      return () => {
-        tween.kill();
-      };
+      // Cursor Setup inside Context
+      if (window.innerWidth >= 768 && cursorRef.current) {
+        // Fix #1: Let GSAP handle centering natively to avoid fighting Tailwind transforms
+        gsap.set(cursorRef.current, { xPercent: -50, yPercent: -50 });
+
+        // Fix #2: Reduced duration from 0.4 to 0.15 for tighter tracking
+        const xTo = gsap.quickTo(cursorRef.current, "x", {
+          duration: 0.15,
+          ease: "power3.out",
+        });
+        const yTo = gsap.quickTo(cursorRef.current, "y", {
+          duration: 0.15,
+          ease: "power3.out",
+        });
+
+        moveCursor = (e) => {
+          xTo(e.clientX);
+          yTo(e.clientY);
+        };
+
+        window.addEventListener("mousemove", moveCursor);
+      }
     }, sectionRef);
 
-    // ⚡ SUPER OPTIMIZED: Use gsap.quickTo() for cursor tracking to reduce CPU load drastically
-    if (window.innerWidth >= 768) {
-      // Create performant setters mapping directly to transform styling
-      const xTo = gsap.quickTo(cursorRef.current, "x", {
-        duration: 0.4,
-        ease: "power3.out",
-      });
-      const yTo = gsap.quickTo(cursorRef.current, "y", {
-        duration: 0.4,
-        ease: "power3.out",
-      });
-
-      const moveCursor = (e) => {
-        xTo(e.clientX);
-        yTo(e.clientY);
-      };
-
-      window.addEventListener("mousemove", moveCursor);
-
-      return () => {
-        ctx.revert();
+    // Unified cleanup phase
+    return () => {
+      ctx.revert();
+      if (moveCursor) {
         window.removeEventListener("mousemove", moveCursor);
-      };
-    } else {
-      return () => ctx.revert();
-    }
+      }
+    };
   }, []);
 
   const handleMouseEnter = () => {
@@ -398,7 +397,7 @@ const Team = () => {
       gsap.to(cursorRef.current, {
         scale: 3,
         backgroundColor: "#5724ff",
-        opacity: 0.5,
+        opacity: 0.8, // Raised opacity slightly for visibility without blend modes
         duration: 0.3,
       });
     }
@@ -417,10 +416,12 @@ const Team = () => {
 
   return (
     <div className="relative bg-black overflow-hidden selection:bg-violet-300 selection:text-black">
-      {/* ⚡ OPTIMIZED: Added will-change-transform for smooth GPU acceleration */}
+      {/* Fix #3: Removed tailwind `transform -translate-x-1/2 -translate-y-1/2`
+        Fix #4: Removed `mix-blend-difference` as it ruins scroll performance heavily on most setups 
+      */}
       <div
         ref={cursorRef}
-        className="hidden md:block fixed top-0 left-0 w-4 h-4 bg-yellow-300 rounded-full pointer-events-none z-50 mix-blend-difference transform -translate-x-1/2 -translate-y-1/2 will-change-transform"
+        className="hidden md:block fixed top-0 left-0 w-4 h-4 bg-yellow-300 rounded-full pointer-events-none z-50 will-change-transform"
       />
 
       {/* --- LEADER HIERARCHY SECTION --- */}
@@ -435,21 +436,22 @@ const Team = () => {
         </div>
 
         <div className="flex flex-col w-full max-w-[95%] xl:max-w-[90%] mx-auto px-5 gap-10 md:gap-16">
-          {/* 👑 ROW 1: PRINCIPAL (CENTERED) */}
+          {/* PRINCIPAL (CENTERED) */}
           <div className="flex justify-center w-full">
             <div
               key={principal.id}
-              className="group relative w-full sm:w-[400px] md:w-[450px] h-[450px] md:h-[550px] overflow-hidden rounded-2xl cursor-pointer bg-zinc-900 border border-yellow-300/30 hover:border-yellow-300/80 transition-all duration-500 shadow-[0_0_30px_rgba(253,224,71,0.05)] hover:shadow-[0_0_40px_rgba(253,224,71,0.2)]"
+              className="group relative w-full sm:w-[400px] md:w-[450px] h-[450px] md:h-[550px] overflow-hidden rounded-2xl cursor-pointer bg-zinc-900 border border-yellow-300/30 hover:border-yellow-300/80 transition-colors duration-500 shadow-[0_0_30px_rgba(253,224,71,0.05)] hover:shadow-[0_0_40px_rgba(253,224,71,0.2)]"
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             >
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {/* Fix #5: Swapped transition-all to transition-[transform,filter,opacity] for hardware acceleration */}
                 <img
                   src={principal.img}
                   alt={principal.name}
                   loading="lazy"
                   decoding="async"
-                  className="w-full h-full object-cover grayscale opacity-70 transition-all duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-105 pointer-events-auto"
+                  className="w-full h-full object-cover grayscale opacity-70 transition-[transform,filter,opacity] duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-105 pointer-events-auto will-change-transform"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
               </div>
@@ -465,12 +467,12 @@ const Team = () => {
             </div>
           </div>
 
-          {/* 👥 ROW 2: FACULTY ADVISORS (4-GRID) */}
+          {/* FACULTY ADVISORS (4-GRID) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 w-full">
             {facultyAdvisors.map((leader) => (
               <div
                 key={leader.id}
-                className="group relative w-full h-[380px] md:h-[480px] overflow-hidden rounded-2xl cursor-pointer bg-zinc-900 border border-white/5 hover:border-white/30 transition-all duration-500"
+                className="group relative w-full h-[380px] md:h-[480px] overflow-hidden rounded-2xl cursor-pointer bg-zinc-900 border border-white/5 hover:border-white/30 transition-colors duration-500"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
               >
@@ -480,7 +482,7 @@ const Team = () => {
                     alt={leader.name}
                     loading="lazy"
                     decoding="async"
-                    className="w-full h-full object-cover grayscale opacity-70 transition-all duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-110 pointer-events-auto"
+                    className="w-full h-full object-cover grayscale opacity-70 transition-[transform,filter,opacity] duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-110 pointer-events-auto will-change-transform"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />
                 </div>
@@ -504,6 +506,7 @@ const Team = () => {
         ref={sectionRef}
         className="h-dvh bg-black flex flex-col justify-center relative overflow-hidden"
       >
+        {/* Fix #6: Blur effects are notorious for dropping frames. If lag persists, drop blur to 60px or remove. */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-violet-300/10 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="absolute top-10 md:top-16 left-5 md:left-20 z-10">
@@ -515,7 +518,6 @@ const Team = () => {
           </h2>
         </div>
 
-        {/* ⚡ OPTIMIZED: Added will-change-transform for smooth horizontal scrolling */}
         <div
           className="flex mt-32 md:mt-16 pl-5 md:pl-20 will-change-transform"
           ref={sliderRef}
@@ -523,7 +525,7 @@ const Team = () => {
           {teamMembers.map((member) => (
             <div
               key={member.id}
-              className="group relative w-[280px] sm:w-[320px] md:w-[450px] h-[380px] md:h-[520px] mr-6 md:mr-8 flex-shrink-0 overflow-hidden rounded-2xl cursor-pointer bg-zinc-900 border border-white/5 hover:border-white/20 transition-all duration-500"
+              className="group relative w-[280px] sm:w-[320px] md:w-[450px] h-[380px] md:h-[520px] mr-6 md:mr-8 flex-shrink-0 overflow-hidden rounded-2xl cursor-pointer bg-zinc-900 border border-white/5 hover:border-white/20 transition-colors duration-500"
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             >
@@ -533,7 +535,7 @@ const Team = () => {
                   alt={member.name}
                   loading="lazy"
                   decoding="async"
-                  className="w-full h-full object-cover grayscale opacity-70 transition-all duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-110 pointer-events-auto"
+                  className="w-full h-full object-cover grayscale opacity-70 transition-[transform,filter,opacity] duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-110 pointer-events-auto will-change-transform"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />
               </div>
@@ -552,7 +554,7 @@ const Team = () => {
                       href={member.instagram}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2.5 md:p-3 rounded-full bg-blue-50/10 backdrop-blur-md border border-blue-50/20 text-blue-50 hover:bg-violet-300 hover:text-white transition-all duration-300 cursor-pointer"
+                      className="p-2.5 md:p-3 rounded-full bg-zinc-800/80 border border-blue-50/20 text-blue-50 hover:bg-violet-300 hover:text-white transition-colors duration-300 cursor-pointer"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -585,7 +587,7 @@ const Team = () => {
                       href={member.linkedin}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2.5 md:p-3 rounded-full bg-blue-50/10 backdrop-blur-md border border-blue-50/20 text-blue-50 hover:bg-blue-300 hover:text-black transition-all duration-300 cursor-pointer"
+                      className="p-2.5 md:p-3 rounded-full bg-zinc-800/80 border border-blue-50/20 text-blue-50 hover:bg-blue-300 hover:text-black transition-colors duration-300 cursor-pointer"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
