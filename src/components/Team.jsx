@@ -6,11 +6,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// ⚡️ Component now accepts props with empty array fallbacks
 const Team = ({ topLeaders = [], teamMembers = [] }) => {
   const sectionRef = useRef(null);
   const sliderRef = useRef(null);
-  const cursorRef = useRef(null);
 
   // Safely extract leaders if the array isn't empty
   const principal = topLeaders.length > 0 ? topLeaders[0] : null;
@@ -20,11 +18,11 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
     // If no team members exist, don't run the slider animation
     if (teamMembers.length === 0) return;
 
-    let moveCursor;
     const ctx = gsap.context(() => {
       const slider = sliderRef.current;
 
-      const getScrollAmount = () => -(slider.offsetWidth - window.innerWidth);
+      // OPTIMIZATION: Using scrollWidth instead of offsetWidth for accurate horizontal distance
+      const getScrollAmount = () => -(slider.scrollWidth - window.innerWidth);
 
       gsap.to(slider, {
         x: getScrollAmount,
@@ -33,62 +31,21 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
           trigger: sectionRef.current,
           pin: true,
           start: "top top",
-          end: () => `+=${slider.offsetWidth - window.innerWidth}`,
+          end: () => `+=${slider.scrollWidth - window.innerWidth}`,
           scrub: 0.5,
           invalidateOnRefresh: true,
           anticipatePin: 1,
         },
       });
-
-      if (window.innerWidth >= 768 && cursorRef.current) {
-        gsap.set(cursorRef.current, { xPercent: -50, yPercent: -50 });
-        const xTo = gsap.quickTo(cursorRef.current, "x", {
-          duration: 0.15,
-          ease: "power3.out",
-        });
-        const yTo = gsap.quickTo(cursorRef.current, "y", {
-          duration: 0.15,
-          ease: "power3.out",
-        });
-
-        moveCursor = (e) => {
-          xTo(e.clientX);
-          yTo(e.clientY);
-        };
-        window.addEventListener("mousemove", moveCursor);
-      }
     }, sectionRef);
 
     return () => {
       ctx.revert();
-      if (moveCursor) window.removeEventListener("mousemove", moveCursor);
     };
   }, [teamMembers]); // Re-run if the teamMembers prop changes
 
-  const handleMouseEnter = () =>
-    window.innerWidth >= 768 &&
-    gsap.to(cursorRef.current, {
-      scale: 3,
-      backgroundColor: "#5724ff",
-      opacity: 0.8,
-      duration: 0.3,
-    });
-  const handleMouseLeave = () =>
-    window.innerWidth >= 768 &&
-    gsap.to(cursorRef.current, {
-      scale: 1,
-      backgroundColor: "#edff66",
-      opacity: 1,
-      duration: 0.3,
-    });
-
   return (
     <div className="relative bg-black overflow-hidden selection:bg-violet-300 selection:text-black">
-      <div
-        ref={cursorRef}
-        className="hidden md:block fixed top-0 left-0 w-4 h-4 bg-yellow-300 rounded-full pointer-events-none z-50 will-change-transform"
-      />
-
       {/* --- LEADER HIERARCHY SECTION --- */}
       {principal && (
         <section className="relative w-full min-h-screen bg-black flex flex-col justify-center items-center py-24 z-10 transform-gpu">
@@ -103,11 +60,7 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
 
           <div className="flex flex-col w-full max-w-[95%] xl:max-w-[90%] mx-auto px-5 gap-10 md:gap-16">
             <div className="flex justify-center w-full">
-              <div
-                className="group relative w-full sm:w-[400px] md:w-[450px] h-[450px] md:h-[550px] overflow-hidden rounded-2xl cursor-pointer bg-zinc-900 border border-yellow-300/30 hover:border-yellow-300/80 transition-colors duration-500 shadow-[0_0_30px_rgba(253,224,71,0.05)] hover:shadow-[0_0_40px_rgba(253,224,71,0.2)] transform-gpu"
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-              >
+              <div className="group relative w-full sm:w-[400px] md:w-[450px] h-[450px] md:h-[550px] overflow-hidden rounded-2xl bg-zinc-900 border border-yellow-300/30 hover:border-yellow-300/80 transition-colors duration-500 shadow-[0_0_30px_rgba(253,224,71,0.05)] hover:shadow-[0_0_40px_rgba(253,224,71,0.2)] transform-gpu">
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                   <img
                     src={principal.img}
@@ -132,9 +85,7 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
               {facultyAdvisors.map((leader) => (
                 <div
                   key={leader.id}
-                  className="group relative w-full h-[380px] md:h-[480px] overflow-hidden rounded-2xl cursor-pointer bg-zinc-900 border border-white/5 hover:border-white/30 transition-colors duration-500 transform-gpu"
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
+                  className="group relative w-full h-[380px] md:h-[480px] overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-white/30 transition-colors duration-500 transform-gpu"
                 >
                   <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <img
@@ -185,9 +136,7 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
               {teamMembers.map((member) => (
                 <div
                   key={member.id}
-                  className="group relative w-[280px] sm:w-[320px] md:w-[450px] h-[380px] md:h-[520px] mr-6 md:mr-8 flex-shrink-0 overflow-hidden rounded-2xl cursor-pointer bg-zinc-900 border border-white/5 hover:border-white/20 transition-colors duration-500 transform-gpu"
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
+                  className="group relative w-[280px] sm:w-[320px] md:w-[450px] h-[380px] md:h-[520px] mr-6 md:mr-8 flex-shrink-0 overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-white/20 transition-colors duration-500 transform-gpu"
                 >
                   <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <img

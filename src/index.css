@@ -12,13 +12,6 @@ body {
   cursor: auto;
 }
 
-@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
-  body {
-    cursor: none;
-  }
-}
-
-
 @layer base {
   @font-face {
     font-family: "circular-web";
@@ -198,44 +191,4 @@ body {
     height: 6px;
     opacity: 0.4;
   }
-}
-
-
-/* Define the wobble animation */
-@keyframes wobble {
-
-  0%,
-  100% {
-    transform: translateX(0%);
-  }
-
-  15% {
-    transform: translateX(-3%) rotate(-4deg);
-  }
-
-  30% {
-    transform: translateX(2%) rotate(3deg);
-  }
-
-  45% {
-    transform: translateX(-1.5%) rotate(-2deg);
-  }
-
-  60% {
-    transform: translateX(1%) rotate(1deg);
-  }
-
-  75% {
-    transform: translateX(-0.5%) rotate(-1deg);
-  }
-}
-
-/* Class to apply the hover effect */
-.hover-wobble {
-  /* display: inline-block or block is required for transforms to work on text */
-  display: inline-block;
-}
-
-.hover-wobble:hover {
-  animation: wobble 0.8s ease-in-out;
 }
