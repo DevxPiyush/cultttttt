@@ -3,8 +3,11 @@ import NavBar from "./components/Navbar";
 import Hero from "./components/Hero";
 import CustomCursor from "./components/CustomCursor";
 
-// 1️⃣ DYNAMIC IMPORTS: This splits your code into smaller chunks.
-// These won't be downloaded until they are actually needed.
+// ⚡ IMPORT YOUR EXTRACTED TEAM DATA HERE
+// Note: Adjust the path "./constants/teamdetails" if your folder is named differently (e.g., "./data/teamdetails")
+import { topLeaders, teamMembers } from "./constants/teamdata.js";
+
+// 1️⃣ DYNAMIC IMPORTS
 const About = lazy(() => import("./components/About"));
 const Features = lazy(() => import("./components/Features"));
 const Story = lazy(() => import("./components/Story"));
@@ -12,7 +15,6 @@ const Team = lazy(() => import("./components/Team"));
 const Footer = lazy(() => import("./components/Footer"));
 
 // 2️⃣ CUSTOM LAZY RENDER WRAPPER
-// This watches the scroll position and renders children only when they get close.
 const LazySection = ({ children, placeholderHeight = "100vh" }) => {
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef(null);
@@ -22,11 +24,9 @@ const LazySection = ({ children, placeholderHeight = "100vh" }) => {
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          observer.disconnect(); // Stop observing once it has rendered
+          observer.disconnect();
         }
       },
-      // rootMargin: "300px" means it will start rendering 300px BEFORE
-      // it enters the screen, ensuring it's ready by the time the user sees it.
       { rootMargin: "300px" },
     );
 
@@ -38,8 +38,6 @@ const LazySection = ({ children, placeholderHeight = "100vh" }) => {
   }, []);
 
   return (
-    // We give it a temporary height so the page has scrollable space
-    // before the actual components load in.
     <div
       ref={sectionRef}
       style={{ minHeight: isVisible ? "auto" : placeholderHeight }}
@@ -77,8 +75,7 @@ function App() {
     >
       {showCustomCursor ? <CustomCursor /> : null}
 
-      {/* ⚡ ALWAYS LOAD AT START: NavBar and Hero are above the fold, 
-          so we never lazy load them. We want them visible instantly. */}
+      {/* ⚡ ALWAYS LOAD AT START */}
       <NavBar />
       <Hero />
 
@@ -97,7 +94,8 @@ function App() {
         </LazySection>
 
         <LazySection>
-          <Team />
+          {/* 🎯 PASS THE DATA AS PROPS HERE */}
+          <Team topLeaders={topLeaders} teamMembers={teamMembers} />
         </LazySection>
 
         <LazySection placeholderHeight="20vh">

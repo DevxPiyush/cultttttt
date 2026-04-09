@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { TiLocationArrow } from "react-icons/ti";
 import gsap from "gsap";
 
@@ -8,15 +8,23 @@ export const BentoTilt = ({ children, className = "" }) => {
   useEffect(() => {
     if (!itemRef.current) return;
 
-    // ⚡ HIGH PERFORMANCE HOVER: gsap.quickTo
-    const xTo = gsap.quickTo(itemRef.current, "rotationY", {
-      duration: 0.5,
-      ease: "power3.out",
-    });
-    const yTo = gsap.quickTo(itemRef.current, "rotationX", {
-      duration: 0.5,
-      ease: "power3.out",
-    });
+    // 🚀 OPTIMIZATION: Disable heavy 3D math on mobile devices
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) return;
+
+    let xTo, yTo;
+
+    // Wrap in GSAP context for perfect memory cleanup
+    const ctx = gsap.context(() => {
+      xTo = gsap.quickTo(itemRef.current, "rotationY", {
+        duration: 0.5,
+        ease: "power3.out",
+      });
+      yTo = gsap.quickTo(itemRef.current, "rotationX", {
+        duration: 0.5,
+        ease: "power3.out",
+      });
+    }, itemRef);
 
     const handleMouseMove = (event) => {
       const { left, top, width, height } =
@@ -39,28 +47,28 @@ export const BentoTilt = ({ children, className = "" }) => {
       gsap.to(itemRef.current, { scale: 1, duration: 0.5, ease: "power3.out" });
     };
 
-    itemRef.current.addEventListener("mousemove", handleMouseMove);
-    itemRef.current.addEventListener("mouseleave", handleMouseLeave);
+    const node = itemRef.current;
+    node.addEventListener("mousemove", handleMouseMove);
+    node.addEventListener("mouseleave", handleMouseLeave);
 
     return () => {
-      if (itemRef.current) {
-        itemRef.current.removeEventListener("mousemove", handleMouseMove);
-        itemRef.current.removeEventListener("mouseleave", handleMouseLeave);
-      }
+      node.removeEventListener("mousemove", handleMouseMove);
+      node.removeEventListener("mouseleave", handleMouseLeave);
+      ctx.revert();
     };
   }, []);
 
   return (
-    <div ref={itemRef} className={`${className} will-change-transform`}>
+    // 🚀 OPTIMIZATION: Swapped will-change for transform-gpu to manage GPU memory better
+    <div ref={itemRef} className={`${className} transform-gpu`}>
       {children}
     </div>
   );
 };
 
 export const BentoCard = ({ src, title, description, ctaText, href }) => {
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
-  const [hoverOpacity, setHoverOpacity] = useState(0);
   const hoverButtonRef = useRef(null);
+  const glowRef = useRef(null);
   const videoRef = useRef(null);
 
   // 🚀 PERFORMANCE: IntersectionObserver for auto-pause background videos
@@ -70,14 +78,12 @@ export const BentoCard = ({ src, title, description, ctaText, href }) => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          videoRef.current
-            .play()
-            .catch((e) => console.log("Autoplay blocked:", e));
+          videoRef.current.play().catch(() => {}); // Silent catch prevents console spam
         } else {
           videoRef.current.pause();
         }
       },
-      { threshold: 0.2 },
+      { threshold: 0.1 }, // Starts playing slightly earlier for smoother UX
     );
 
     observer.observe(videoRef.current);
@@ -85,18 +91,24 @@ export const BentoCard = ({ src, title, description, ctaText, href }) => {
     return () => observer.disconnect();
   }, []);
 
-  const handleMouseMove = (event) => {
-    if (!hoverButtonRef.current) return;
+  // 🚀 OPTIMIZATION: Direct DOM manipulation instead of React useState.
+  // This prevents the entire card & video from re-rendering on every mouse pixel movement.
+  const handleMouseMove = (e) => {
+    if (!hoverButtonRef.current || !glowRef.current) return;
     const rect = hoverButtonRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-    setCursorPosition({
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
-    });
+    glowRef.current.style.background = `radial-gradient(100px circle at ${x}px ${y}px, #656fe288, #00000026)`;
   };
 
-  const handleMouseEnter = () => setHoverOpacity(1);
-  const handleMouseLeave = () => setHoverOpacity(0);
+  const handleMouseEnter = () => {
+    if (glowRef.current) glowRef.current.style.opacity = "1";
+  };
+
+  const handleMouseLeave = () => {
+    if (glowRef.current) glowRef.current.style.opacity = "0";
+  };
 
   return (
     <div className="relative size-full overflow-hidden group">
@@ -107,7 +119,7 @@ export const BentoCard = ({ src, title, description, ctaText, href }) => {
         muted
         playsInline
         preload="none"
-        className="absolute left-0 top-0 size-full object-cover object-center will-change-transform"
+        className="absolute left-0 top-0 size-full object-cover object-center transform-gpu"
       />
 
       <div className="absolute inset-0 flex size-full flex-col justify-between p-5 transition-colors duration-500">
@@ -115,7 +127,6 @@ export const BentoCard = ({ src, title, description, ctaText, href }) => {
           <h1 className="bento-title special-font mix-blend-difference text-yellow-300">
             {title}
           </h1>
-          {/* 🎨 FLAWLESS BLENDING: Applied mix-blend-difference and pure white text */}
           {description && (
             <p className="mt-3 max-w-64 text-xs md:text-base text-white mix-blend-difference tracking-wide">
               {description}
@@ -134,12 +145,10 @@ export const BentoCard = ({ src, title, description, ctaText, href }) => {
             onMouseLeave={handleMouseLeave}
             className="border-hsla relative flex w-fit cursor-pointer items-center gap-1 overflow-hidden rounded-full bg-black px-5 py-2 text-xs uppercase text-white/80 hover:text-white transition-colors"
           >
+            {/* The Glow Element controlled by Ref */}
             <div
-              className="pointer-events-none absolute -inset-px opacity-0 transition duration-300"
-              style={{
-                opacity: hoverOpacity,
-                background: `radial-gradient(100px circle at ${cursorPosition.x}px ${cursorPosition.y}px, #656fe288, #00000026)`,
-              }}
+              ref={glowRef}
+              className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300"
             />
             <TiLocationArrow className="relative z-20" />
             <p className="relative z-20 font-bold">{ctaText}</p>
@@ -168,7 +177,6 @@ const Features = () => {
           </p>
         </div>
 
-        {/* BIG HERO EVENT - PARAMPARA */}
         <BentoTilt className="border-hsla relative mb-7 h-96 w-full overflow-hidden rounded-md md:h-[65vh]">
           <BentoCard
             src="videos/parampara.mp4"
@@ -183,9 +191,7 @@ const Features = () => {
           />
         </BentoTilt>
 
-        {/* 📐 FLAWLESS ASYMMETRICAL BENTO GRID FOR PC */}
         <div className="grid h-auto md:h-[80vh] w-full grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-7">
-          {/* EVENT 2 - SHIVPARV (Tall Left Column) */}
           <BentoTilt className="bento-tilt_1 h-96 md:h-full md:col-span-1 md:row-span-2">
             <BentoCard
               src="videos/shivparv.mp4"
@@ -200,7 +206,6 @@ const Features = () => {
             />
           </BentoTilt>
 
-          {/* EVENT 3 - ALUMNI MEET (Wide Top Right) */}
           <BentoTilt className="bento-tilt_1 h-96 md:h-full md:col-span-2 md:row-span-1">
             <BentoCard
               src="videos/hero-1.mp4"
@@ -215,7 +220,6 @@ const Features = () => {
             />
           </BentoTilt>
 
-          {/* EVENT 4 - GANPATI (Small Bottom Middle) */}
           <BentoTilt className="bento-tilt_1 h-96 md:h-full md:col-span-1 md:row-span-1">
             <BentoCard
               src="videos/hero-3.mp4"
@@ -230,7 +234,6 @@ const Features = () => {
             />
           </BentoTilt>
 
-          {/* EVENT 5 - DAHIHANDI (Small Bottom Right) */}
           <BentoTilt className="bento-tilt_1 h-96 md:h-full md:col-span-1 md:row-span-1">
             <BentoCard
               src="videos/dahihandi.mp4"
