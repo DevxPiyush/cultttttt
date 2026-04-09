@@ -50,9 +50,32 @@ const LazySection = ({ children, placeholderHeight = "100vh" }) => {
 };
 
 function App() {
+  const [showCustomCursor, setShowCustomCursor] = useState(false);
+
+  useEffect(() => {
+    const updateCursorVisibility = () => {
+      const isDesktopWidth = window.innerWidth >= 768;
+      const hasFinePointer = window.matchMedia(
+        "(hover: hover) and (pointer: fine)",
+      ).matches;
+      setShowCustomCursor(isDesktopWidth && hasFinePointer);
+    };
+
+    updateCursorVisibility();
+    window.addEventListener("resize", updateCursorVisibility);
+
+    return () => {
+      window.removeEventListener("resize", updateCursorVisibility);
+    };
+  }, []);
+
   return (
-    <main className="relative min-h-screen w-screen overflow-x-hidden cursor-none bg-black">
-      <CustomCursor />
+    <main
+      className={`relative min-h-screen w-screen overflow-x-hidden bg-black ${
+        showCustomCursor ? "cursor-none" : "cursor-auto"
+      }`}
+    >
+      {showCustomCursor ? <CustomCursor /> : null}
 
       {/* ⚡ ALWAYS LOAD AT START: NavBar and Hero are above the fold, 
           so we never lazy load them. We want them visible instantly. */}
