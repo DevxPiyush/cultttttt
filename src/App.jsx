@@ -3,6 +3,7 @@ import NavBar from "./components/Navbar";
 import Hero from "./components/Hero";
 import CustomCursor from "./components/CustomCursor";
 
+// ⚡ IMPORT YOUR EXTRACTED TEAM DATA HERE
 import { topLeaders, teamMembers } from "./constants/teamdata.js";
 
 // 1️⃣ DYNAMIC IMPORTS
@@ -12,7 +13,7 @@ const Story = lazy(() => import("./components/Story"));
 const Team = lazy(() => import("./components/Team"));
 const Footer = lazy(() => import("./components/Footer"));
 
-// 2️⃣ CUSTOM LAZY RENDER WRAPPER (Updated)
+// 2️⃣ CUSTOM LAZY RENDER WRAPPER (With Spinner)
 const LazySection = ({ children, placeholderHeight = "100vh" }) => {
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef(null);
@@ -35,17 +36,23 @@ const LazySection = ({ children, placeholderHeight = "100vh" }) => {
     return () => observer.disconnect();
   }, []);
 
+  // 🌀 Tailwind Loading Spinner Fallback
+  const LoadingFallback = (
+    <div
+      className="flex items-center justify-center w-full"
+      style={{ minHeight: placeholderHeight }}
+    >
+      <div className="w-10 h-10 border-4 border-gray-800 border-t-white rounded-full animate-spin"></div>
+    </div>
+  );
+
   return (
     <div
       ref={sectionRef}
-      // When visible, let the content dictate the height. Otherwise hold the space.
       style={{ minHeight: isVisible ? "auto" : placeholderHeight }}
     >
       {isVisible ? (
-        /* ⚡ INDEPENDENT SUSPENSE BOUNDARY */
-        <Suspense fallback={<div style={{ minHeight: placeholderHeight }} />}>
-          {children}
-        </Suspense>
+        <Suspense fallback={LoadingFallback}>{children}</Suspense>
       ) : null}
     </div>
   );
@@ -83,7 +90,7 @@ function App() {
       <NavBar />
       <Hero />
 
-      {/* 🚀 LAZY LOADED SECTIONS (Removed outer Suspense) */}
+      {/* 🚀 LAZY LOADED SECTIONS WITH INDIVIDUAL SUSPENSE BOUNDARIES */}
       <LazySection>
         <About />
       </LazySection>
@@ -97,6 +104,7 @@ function App() {
       </LazySection>
 
       <LazySection>
+        {/* 🎯 PASS THE DATA AS PROPS HERE */}
         <Team topLeaders={topLeaders} teamMembers={teamMembers} />
       </LazySection>
 
