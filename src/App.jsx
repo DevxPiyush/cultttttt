@@ -3,8 +3,6 @@ import NavBar from "./components/Navbar";
 import Hero from "./components/Hero";
 import CustomCursor from "./components/CustomCursor";
 
-// ⚡ IMPORT YOUR EXTRACTED TEAM DATA HERE
-// Note: Adjust the path "./constants/teamdetails" if your folder is named differently (e.g., "./data/teamdetails")
 import { topLeaders, teamMembers } from "./constants/teamdata.js";
 
 // 1️⃣ DYNAMIC IMPORTS
@@ -14,7 +12,7 @@ const Story = lazy(() => import("./components/Story"));
 const Team = lazy(() => import("./components/Team"));
 const Footer = lazy(() => import("./components/Footer"));
 
-// 2️⃣ CUSTOM LAZY RENDER WRAPPER
+// 2️⃣ CUSTOM LAZY RENDER WRAPPER (Updated)
 const LazySection = ({ children, placeholderHeight = "100vh" }) => {
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef(null);
@@ -40,9 +38,15 @@ const LazySection = ({ children, placeholderHeight = "100vh" }) => {
   return (
     <div
       ref={sectionRef}
+      // When visible, let the content dictate the height. Otherwise hold the space.
       style={{ minHeight: isVisible ? "auto" : placeholderHeight }}
     >
-      {isVisible ? children : null}
+      {isVisible ? (
+        /* ⚡ INDEPENDENT SUSPENSE BOUNDARY */
+        <Suspense fallback={<div style={{ minHeight: placeholderHeight }} />}>
+          {children}
+        </Suspense>
+      ) : null}
     </div>
   );
 };
@@ -79,29 +83,26 @@ function App() {
       <NavBar />
       <Hero />
 
-      {/* 🚀 LAZY LOADED SECTIONS */}
-      <Suspense fallback={null}>
-        <LazySection>
-          <About />
-        </LazySection>
+      {/* 🚀 LAZY LOADED SECTIONS (Removed outer Suspense) */}
+      <LazySection>
+        <About />
+      </LazySection>
 
-        <LazySection>
-          <Features />
-        </LazySection>
+      <LazySection>
+        <Features />
+      </LazySection>
 
-        <LazySection>
-          <Story />
-        </LazySection>
+      <LazySection>
+        <Story />
+      </LazySection>
 
-        <LazySection>
-          {/* 🎯 PASS THE DATA AS PROPS HERE */}
-          <Team topLeaders={topLeaders} teamMembers={teamMembers} />
-        </LazySection>
+      <LazySection>
+        <Team topLeaders={topLeaders} teamMembers={teamMembers} />
+      </LazySection>
 
-        <LazySection placeholderHeight="20vh">
-          <Footer />
-        </LazySection>
-      </Suspense>
+      <LazySection placeholderHeight="20vh">
+        <Footer />
+      </LazySection>
     </main>
   );
 }
