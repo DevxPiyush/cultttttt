@@ -41,7 +41,8 @@ const Footer = () => {
               Cultural Council
             </p>
             <p className="text-xs md:text-sm font-circular-web font-medium mt-1 opacity-90">
-              © 2026 Cultural Council. All rights reserved.
+              © {new Date().getFullYear()} Cultural Council. All rights
+              reserved.
             </p>
           </div>
 
