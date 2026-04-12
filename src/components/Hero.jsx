@@ -249,7 +249,7 @@ const Hero = () => {
 
         {/* Foreground Text */}
         <h1 className="special-font hero-heading absolute bottom-5 right-5 z-40 text-blue-75 max-sm:!text-[22vw]">
-          C<b>O</b>uncil
+          C<b>O</b>uncil 2025-26
         </h1>
         <div className="absolute left-0 top-0 z-40 size-full pointer-events-none flex flex-col justify-start">
           <div className="mt-24 px-5 sm:px-10">
@@ -270,7 +270,7 @@ const Hero = () => {
 
       {/* Background Text (Revealed on Scroll) */}
       <h1 className="special-font hero-heading absolute bottom-5 right-5 text-zinc-800 max-sm:!text-[22vw]">
-        C<b>O</b>uncil
+        C<b>O</b>uncil 2025-26
       </h1>
     </div>
   );

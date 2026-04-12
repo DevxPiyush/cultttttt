@@ -12,6 +12,8 @@ const Story = () => {
   const containerRef = useRef(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
+
   const teamPhotos = [
     "/img/team-1.webp",
     "/img/team-2.webp",
@@ -21,22 +23,22 @@ const Story = () => {
     "/img/team-6.webp",
   ];
 
-  // Cache quick setters to eliminate CPU overhead during mousemove
   const hoverAnimRefs = useRef({});
 
   useEffect(() => {
+    if (isMobileModalOpen) return;
+
     const interval = setInterval(
       () => setCurrentImageIndex((prev) => (prev + 1) % teamPhotos.length),
       3000,
     );
     return () => clearInterval(interval);
-  }, []);
+  }, [isMobileModalOpen]);
 
   useGSAP(
     () => {
       if (!frameRef.current) return;
 
-      // Initialize quick setters
       hoverAnimRefs.current = {
         x: gsap.quickTo(frameRef.current, "rotateY", {
           duration: 0.4,
@@ -101,7 +103,6 @@ const Story = () => {
     const rotateX = ((y - rect.height / 2) / rect.height) * -8;
     const rotateY = ((x - rect.width / 2) / rect.width) * 8;
 
-    // Use quick setters!
     hoverAnimRefs.current.y(rotateX);
     hoverAnimRefs.current.x(rotateY);
     gsap.set(frameRef.current, { transformPerspective: 600 });
@@ -113,40 +114,106 @@ const Story = () => {
     hoverAnimRefs.current.x(0);
   };
 
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % teamPhotos.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex(
+      (prev) => (prev - 1 + teamPhotos.length) % teamPhotos.length,
+    );
+  };
+
   return (
     <div
       ref={containerRef}
       id="story"
-      className="min-h-screen w-full overflow-hidden bg-black text-blue-50 transform-gpu pb-20"
+      className="min-h-screen w-full overflow-hidden bg-black text-blue-50 transform-gpu pb-20 relative"
     >
       <div className="flex flex-col items-center py-20 w-full">
         <p className="font-general text-sm uppercase md:text-[10px] tracking-widest text-gray-400">
           The Faces Behind the Hype
         </p>
+
         <AnimatedTitle
           title="MEET THE T<b>E</b>AM <br /> WHO RUNS IT <b>A</b>LL"
           containerClass="mt-5 pointer-events-none mix-blend-difference relative z-10"
         />
 
-        <div className="mt-20 w-full flex justify-center px-4 md:px-0">
+        {/* 🚀 WRAPPER DIV: The modal is now bound here, not to the whole screen */}
+        <div className="mt-20 w-full flex justify-center px-4 md:px-0 relative">
+          {/* Original GSAP Animated Frame */}
           <div
             ref={frameRef}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            className="relative overflow-hidden shadow-2xl will-change-transform bg-gray-900 w-[85%] md:w-[320px] h-[400px] md:h-[420px] rounded-[20px] transform-gpu"
+            className={`relative overflow-hidden shadow-2xl will-change-transform bg-gray-900 w-[85%] md:w-[320px] h-[400px] md:h-[420px] rounded-[20px] transform-gpu transition-opacity duration-300 ${
+              isMobileModalOpen
+                ? "opacity-0 pointer-events-none"
+                : "opacity-100"
+            }`}
           >
+            {!isMobileModalOpen && (
+              <button
+                onClick={() => setIsMobileModalOpen(true)}
+                className="absolute top-4 right-4 z-30 rounded-full bg-black/60 px-4 py-2 text-[10px] uppercase tracking-widest text-white backdrop-blur-md md:hidden border border-white/20 animate-pulse transition-all active:scale-90"
+              >
+                See Full Images
+              </button>
+            )}
+
             {teamPhotos.map((photo, index) => (
               <img
                 key={photo}
                 src={photo}
                 alt={`Team ${index + 1}`}
-                className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${index === currentImageIndex ? "opacity-100 z-10" : "opacity-0 z-0"}`}
+                className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+                  index === currentImageIndex
+                    ? "opacity-100 z-10"
+                    : "opacity-0 z-0"
+                }`}
               />
             ))}
           </div>
+
+          {/* 🚀 NEW MODAL OVERLAY: Replaces the frame exactly, no blur over text! */}
+          {isMobileModalOpen && (
+            <div className="absolute top-0 w-[90%] max-w-md bg-[#0a0a0a] border border-white/10 rounded-2xl p-3 shadow-2xl z-[100] flex flex-col gap-3 animate-in zoom-in-95 duration-200 md:hidden">
+              <div className="w-full flex justify-end">
+                <button
+                  onClick={() => setIsMobileModalOpen(false)}
+                  className="text-white text-[10px] uppercase tracking-widest border border-white/20 rounded-full px-5 py-2 bg-white/10 active:scale-90 active:bg-white/20 transition-all duration-200"
+                >
+                  Close ✕
+                </button>
+              </div>
+
+              <img
+                src={teamPhotos[currentImageIndex]}
+                alt="Full Team View"
+                className="w-full h-auto max-h-[50vh] object-contain rounded-lg shadow-inner"
+              />
+
+              <div className="flex w-full justify-between gap-3">
+                <button
+                  onClick={prevImage}
+                  className="flex-1 text-white text-[10px] uppercase tracking-widest border border-white/20 rounded-full py-3 bg-white/5 active:scale-90 active:bg-white/20 transition-all duration-200"
+                >
+                  ← Prev
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="flex-1 text-white text-[10px] uppercase tracking-widest border border-white/20 rounded-full py-3 bg-white/5 active:scale-90 active:bg-white/20 transition-all duration-200"
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="mt-20 md:mt-40 w-full flex justify-center md:justify-end md:pr-20">
+        {/* 🚀 BOTTOM TEXT: Now 100% visible and unblurred */}
+        <div className="mt-20 md:mt-40 w-full flex justify-center md:justify-end md:pr-20 relative z-10">
           <div className="max-w-sm text-center md:text-left px-5 md:px-0">
             <p className="text-violet-50 font-circular-web text-lg">
               Behind every deafening cheer, every massive stage, and every
