@@ -1,5 +1,4 @@
 // src/components/Team.jsx
-
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -10,69 +9,71 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
   const sectionRef = useRef(null);
   const sliderRef = useRef(null);
 
-  // Safely extract leaders if the array isn't empty
   const principal = topLeaders.length > 0 ? topLeaders[0] : null;
   const facultyAdvisors = topLeaders.length > 1 ? topLeaders.slice(1) : [];
 
-  // 1. New IntersectionObserver for Mobile Viewport Animation
+  // 1. INDIVIDUAL CARD ANIMATION OBSERVER
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-inview");
-          } else {
-            entry.target.classList.remove("is-inview");
-          }
-        });
-      },
-      { threshold: 0.4 }, // Triggers when 40% of the card is visible
-    );
+    // This observer checks if the card is in the active "focus" area of the mobile screen
+    const observerOptions = {
+      root: null, // viewport
+      rootMargin: "-20% 0px -20% 0px", // Triggers when card is in the middle 60% of the screen
+      threshold: 0.6, // Requires 60% of the card to be visible
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          // Card enters the focus area
+          entry.target.classList.add("is-active");
+        } else {
+          // Card leaves the focus area
+          entry.target.classList.remove("is-active");
+        }
+      });
+    }, observerOptions);
 
     const cards = document.querySelectorAll(".team-card");
     cards.forEach((card) => observer.observe(card));
 
-    return () => {
-      cards.forEach((card) => observer.unobserve(card));
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, [topLeaders, teamMembers]);
 
-  // Existing GSAP Slider logic
+  // 2. GSAP SCROLL LOGIC (DESKTOP)
   useEffect(() => {
     if (teamMembers.length === 0) return;
 
     const ctx = gsap.context(() => {
-      const slider = sliderRef.current;
-      const getScrollAmount = () => -(slider.scrollWidth - window.innerWidth);
+      const mm = gsap.matchMedia();
+      mm.add("(min-width: 768px)", () => {
+        const slider = sliderRef.current;
+        const getScrollAmount = () => -(slider.scrollWidth - window.innerWidth);
 
-      gsap.to(slider, {
-        x: getScrollAmount,
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          pin: true,
-          start: "top top",
-          end: () => `+=${slider.scrollWidth - window.innerWidth}`,
-          scrub: 0.5,
-          invalidateOnRefresh: true,
-          anticipatePin: 1,
-        },
+        gsap.to(slider, {
+          x: getScrollAmount,
+          ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            pin: true,
+            start: "top top",
+            end: () => `+=${slider.scrollWidth - window.innerWidth}`,
+            scrub: 0.5,
+            invalidateOnRefresh: true,
+          },
+        });
       });
     }, sectionRef);
 
-    return () => {
-      ctx.revert();
-    };
+    return () => ctx.revert();
   }, [teamMembers]);
 
   return (
-    <div className="relative bg-black overflow-hidden selection:bg-violet-300 selection:text-black">
-      {/* --- LEADER HIERARCHY SECTION --- */}
+    <div className="relative bg-black overflow-hidden selection:bg-violet-300">
+      {/* --- LEADERSHIP SECTION --- */}
       {principal && (
-        <section className="relative w-full min-h-screen bg-black flex flex-col justify-center items-center py-24 z-10 transform-gpu">
-          <div className="text-center mb-10 md:mb-16 px-5">
-            <h1 className="text-4xl md:text-7xl font-zentry text-blue-50 tracking-wide uppercase">
+        <section className="relative w-full min-h-screen bg-black flex flex-col justify-center items-center py-24 px-5">
+          <div className="text-center mb-16">
+            <h1 className="text-4xl md:text-7xl font-zentry text-blue-50 uppercase tracking-wide">
               Cultural Council
             </h1>
             <h2 className="text-2xl md:text-4xl font-general text-yellow-300 mt-1">
@@ -80,55 +81,43 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
             </h2>
           </div>
 
-          <div className="flex flex-col w-full max-w-[95%] xl:max-w-[90%] mx-auto px-5 gap-10 md:gap-16">
-            <div className="flex justify-center w-full">
-              {/* Added 'team-card' here */}
-              <div className="team-card group relative w-full sm:w-[400px] md:w-[450px] h-[450px] md:h-[550px] overflow-hidden rounded-2xl bg-zinc-900 border border-yellow-300/30 hover:border-yellow-300/80 transition-colors duration-500 shadow-[0_0_30px_rgba(253,224,71,0.05)] hover:shadow-[0_0_40px_rgba(253,224,71,0.2)] transform-gpu">
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  {/* Added max-md:group-[.is-inview]:... utilities */}
-                  <img
-                    src={principal.img}
-                    alt={principal.name}
-                    decoding="async"
-                    className="w-full h-full object-cover grayscale opacity-70 transition-[transform,filter,opacity] duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-105 max-md:group-[.is-inview]:grayscale-0 max-md:group-[.is-inview]:opacity-100 max-md:group-[.is-inview]:scale-105 pointer-events-auto"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
-                </div>
-                {/* Added max-md:group-[.is-inview]:... utilities */}
-                <div className="absolute bottom-0 left-0 w-full p-6 md:p-8 transform transition-transform duration-500 md:group-hover:-translate-y-2 max-md:group-[.is-inview]:-translate-y-2 z-10 pointer-events-none flex flex-col items-center text-center">
-                  <h3 className="text-3xl md:text-5xl font-circular-web text-blue-50 mb-1 drop-shadow-md">
+          <div className="flex flex-col w-full max-w-7xl gap-10">
+            <div className="flex justify-center">
+              <div className="team-card group relative w-full max-w-[450px] h-[450px] md:h-[550px] overflow-hidden rounded-2xl border border-yellow-300/20 bg-zinc-900 transition-all duration-500">
+                <img
+                  src={principal.img}
+                  alt={principal.name}
+                  className="card-img w-full h-full object-cover grayscale opacity-60 transition-all duration-700 ease-in-out"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                <div className="absolute bottom-0 p-8 text-center w-full z-10">
+                  <h3 className="text-3xl text-blue-50 font-circular-web">
                     {principal.name}
                   </h3>
-                  <p className="text-lg md:text-xl font-robert-medium text-yellow-300 drop-shadow-md tracking-wider uppercase">
+                  <p className="text-yellow-300 uppercase tracking-widest text-sm">
                     {principal.role}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {facultyAdvisors.map((leader) => (
-                // Added 'team-card' here
                 <div
                   key={leader.id}
-                  className="team-card group relative w-full h-[380px] md:h-[480px] overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-white/30 transition-colors duration-500 transform-gpu"
+                  className="team-card group relative h-[380px] overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 transition-all duration-500"
                 >
-                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {/* Added max-md:group-[.is-inview]:... utilities */}
-                    <img
-                      src={leader.img}
-                      alt={leader.name}
-                      decoding="async"
-                      className="w-full h-full object-cover grayscale opacity-70 transition-[transform,filter,opacity] duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-110 max-md:group-[.is-inview]:grayscale-0 max-md:group-[.is-inview]:opacity-100 max-md:group-[.is-inview]:scale-110 pointer-events-auto"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />
-                  </div>
-                  {/* Added max-md:group-[.is-inview]:... utilities */}
-                  <div className="absolute bottom-0 left-0 w-full p-6 transform transition-transform duration-500 md:group-hover:-translate-y-3 max-md:group-[.is-inview]:-translate-y-3 z-10 pointer-events-none">
-                    <h3 className="text-2xl md:text-3xl font-circular-web text-blue-50 mb-1 drop-shadow-md">
+                  <img
+                    src={leader.img}
+                    alt={leader.name}
+                    className="card-img w-full h-full object-cover grayscale opacity-60 transition-all duration-700 ease-in-out"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                  <div className="absolute bottom-0 p-6 z-10">
+                    <h3 className="text-xl text-blue-50 font-circular-web">
                       {leader.name}
                     </h3>
-                    <p className="text-base md:text-lg font-robert-medium text-violet-300 drop-shadow-md">
+                    <p className="text-violet-300 text-sm uppercase">
                       {leader.role}
                     </p>
                   </div>
@@ -143,12 +132,40 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
       {teamMembers.length > 0 && (
         <section
           ref={sectionRef}
-          className="h-dvh w-full bg-black flex flex-col justify-center relative overflow-hidden transform-gpu"
+          className="min-h-screen md:h-dvh w-full bg-black flex flex-col justify-center relative overflow-hidden py-20 md:py-0"
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(167,139,250,0.08)_0%,transparent_60%)] pointer-events-none" />
+          <div className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 z-50">
+            <div className="flex items-center justify-between gap-4 px-6 py-3 rounded-full border border-violet-400/30 bg-black/60 backdrop-blur-xl shadow-[0_0_30px_rgba(167,139,250,0.2)] animate-bounce min-w-[240px]">
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse [animation-delay:0.2s]" />
+                </div>
+                <span className="hidden md:block text-violet-200 font-robert-medium text-xs uppercase tracking-[0.2em]">
+                  Scroll to view team
+                </span>
+                <span className="block md:hidden text-violet-200 font-robert-medium text-[10px] uppercase tracking-[0.15em]">
+                  Slide right to view team
+                </span>
+              </div>
+              <svg
+                className="w-4 h-4 text-violet-300 transition-transform duration-500 md:rotate-90 rotate-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
+              </svg>
+            </div>
+          </div>
 
-          <div className="absolute top-10 md:top-16 left-5 md:left-20 z-10">
-            <h1 className="text-4xl md:text-7xl font-zentry text-blue-50 tracking-wide uppercase">
+          <div className="absolute top-10 left-5 md:left-20 z-10">
+            <h1 className="text-4xl md:text-7xl font-zentry text-blue-50 uppercase tracking-wide">
               Cultural Council
             </h1>
             <h2 className="text-2xl md:text-4xl font-general text-yellow-300 mt-1">
@@ -156,93 +173,31 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
             </h2>
           </div>
 
-          <div className="w-full overflow-hidden">
+          <div className="w-full overflow-x-auto md:overflow-hidden no-scrollbar">
             <div
-              className="flex mt-32 md:mt-16 pl-5 md:pl-20 pr-5 md:pr-20 w-max transform-gpu"
+              className="flex mt-20 md:mt-16 pl-5 md:pl-20 pr-5 md:pr-20 w-max"
               ref={sliderRef}
             >
               {teamMembers.map((member) => (
-                // Added 'team-card' here
                 <div
                   key={member.id}
-                  className="team-card group relative w-[280px] sm:w-[320px] md:w-[450px] h-[380px] md:h-[520px] mr-6 md:mr-8 flex-shrink-0 overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-white/20 transition-colors duration-500 transform-gpu"
+                  className="team-card group relative w-[280px] md:w-[450px] h-[400px] md:h-[520px] mr-6 md:mr-8 flex-shrink-0 overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 transition-all duration-500"
                 >
-                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {/* Added max-md:group-[.is-inview]:... utilities */}
+                  <div className="absolute inset-0 pointer-events-none">
                     <img
                       src={member.img}
                       alt={member.name}
-                      decoding="async"
-                      className="w-full h-full object-cover grayscale opacity-70 transition-[transform,filter,opacity] duration-700 ease-in-out md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-110 max-md:group-[.is-inview]:grayscale-0 max-md:group-[.is-inview]:opacity-100 max-md:group-[.is-inview]:scale-110 pointer-events-auto"
+                      className="card-img w-full h-full object-cover grayscale opacity-70 transition-all duration-700 ease-in-out"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                   </div>
-                  {/* Added max-md:group-[.is-inview]:... utilities */}
-                  <div className="absolute bottom-0 left-0 w-full p-5 md:p-6 transform transition-transform duration-500 md:group-hover:-translate-y-3 max-md:group-[.is-inview]:-translate-y-3 z-10 pointer-events-none">
-                    <h3 className="text-2xl sm:text-3xl md:text-5xl font-circular-web text-blue-50 mb-0.5">
+                  <div className="absolute bottom-0 left-0 w-full p-6 z-10">
+                    <h3 className="text-2xl md:text-5xl font-circular-web text-blue-50">
                       {member.name}
                     </h3>
-                    <p className="text-base sm:text-lg md:text-xl font-robert-medium text-violet-300 mb-4 md:mb-5">
+                    <p className="text-base md:text-xl font-robert-medium text-violet-300">
                       {member.role}
                     </p>
-
-                    <div className="flex gap-3 pointer-events-auto">
-                      {member.instagram && (
-                        <a
-                          href={member.instagram}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2.5 md:p-3 rounded-full bg-zinc-800/80 border border-blue-50/20 text-blue-50 hover:bg-violet-300 hover:text-white transition-colors duration-300 cursor-pointer"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <rect
-                              width="20"
-                              height="20"
-                              x="2"
-                              y="2"
-                              rx="5"
-                              ry="5"
-                            />
-                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                            <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-                          </svg>
-                        </a>
-                      )}
-                      {member.linkedin && (
-                        <a
-                          href={member.linkedin}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2.5 md:p-3 rounded-full bg-zinc-800/80 border border-blue-50/20 text-blue-50 hover:bg-blue-300 hover:text-black transition-colors duration-300 cursor-pointer"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-                            <rect width="4" height="12" x="2" y="9" />
-                            <circle cx="4" cy="4" r="2" />
-                          </svg>
-                        </a>
-                      )}
-                    </div>
                   </div>
                 </div>
               ))}
@@ -250,6 +205,38 @@ const Team = ({ topLeaders = [], teamMembers = [] }) => {
           </div>
         </section>
       )}
+
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* On Mobile/Small screens, trigger animation via IntersectionObserver */
+        @media (max-width: 767px) {
+          .team-card.is-active {
+            border-color: rgba(167, 139, 250, 0.6);
+            box-shadow: 0 0 30px rgba(167, 139, 250, 0.15);
+          }
+          
+          .team-card.is-active .card-img {
+            filter: grayscale(0%);
+            opacity: 1;
+            transform: scale(1.08);
+          }
+        }
+
+        /* On Desktop, trigger animation via Hover only */
+        @media (min-width: 768px) {
+          .team-card:hover {
+            border-color: rgba(167, 139, 250, 0.6);
+          }
+          
+          .team-card:hover .card-img {
+            filter: grayscale(0%);
+            opacity: 1;
+            transform: scale(1.1);
+          }
+        }
+      `}</style>
     </div>
   );
 };
